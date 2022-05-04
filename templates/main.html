@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Main page</title>
+</head>
+<body>
+<h2>Messages</h2>
+<form method="post" action="/add_message">
+    <input type="text" name="text">
+    <button type="submit">Add message</button>
+</form>
+
+
+
+<div>{{ message}}</div>
+{% if video %}
+<body>
+<video controls="" autoplay="" name="media">
+    <source src={{video}} type="video/mp4">
+</video>
+</body>
+{% endif %}
+
+</body>
+</html>
