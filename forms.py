@@ -1,6 +1,6 @@
 from collections import namedtuple
 import sqlite3
-from random import randint
+from random import randint, choice
 from flask import Flask, render_template, redirect, url_for, request,g
 from urllib.request import urlopen
 import re
@@ -8,25 +8,28 @@ app = Flask(__name__)
 
 Message = namedtuple('Message', 'text tag')
 message = ''
-
-
+video = None
+subtitle = None
 @app.route('/', methods=['GET'])
 def main():
-    global message, video
-    video = None
-    return render_template('main.html', message=message, video = video)
+    global message
+    global video
+    global subtitle
+    return render_template('main.html', message=message, video = video,subtitle = subtitle)
 
 def find_video(text):
     global CURSOR
     CURSOR = get_db().cursor()
     find_word = find_usages(text)
     print(find_word)
+
     if(len(find_word) != 0):
-        r = randint(0, len(find_word))
-        video_id = find_word[r][0]
-        star_time = find_word[r][4] // 1000 - 1
-        end_time = star_time + find_word[r][1] // 1000 + 1
-        print(find_word[r][2])
+        r = choice(find_word)
+        print(r)
+        video_id = r[0]
+        star_time = r[4] // 1000 - 1
+        end_time = star_time + r[1] // 1000 + 5
+        print(r[2])
         video_url = f'https://embed.ted.com/talks/lang/en/{video_id}'
         print(video_url)
         html = str(urlopen(video_url).read())
@@ -36,10 +39,15 @@ def find_video(text):
         print(match)
         start = match.span()[0]
         end = match.span()[1]
-        global video
+
+        global video, subtitle
+        subtitle = r[2]
         video = html[start:end] + f'#t={star_time},{end_time}'
         print(1)
-    return None
+
+        print('finded video ', video)
+        return video, subtitle
+    return None, None
 
 
 @app.route('/add_message', methods=['POST'])
@@ -47,7 +55,12 @@ def add_message():
     text = request.form['text']
     global message
     message = text
-    print(find_video(text))
+    global video
+    global subtitle
+    video, subtitle = find_video(text)
+    if(video == None):
+        message = 'word '+ message+' didn\'t find'
+        subtitle = None
     return redirect(url_for('main'))
 
 
